@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Script Studio — IQ Option Mobile</title>
+<meta name="description" content="Monte, simule e exporte roteiros de operação para execução manual no IQ Option Mobile. Ferramenta educacional, sem conexão com conta.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1220'/%3E%3Cpath d='M18 44V20h8l6 12 6-12h8v24h-7V31l-7 13-7-13v13z' fill='%2334d399'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">SS</div>
+    <div class="brand-text">
+      <h1>Script Studio</h1>
+      <p>IQ Option Mobile · execução manual</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <span class="badge badge-warn"><span class="dot"></span> Educacional</span>
+    <button class="btn btn-ghost" id="btnReset" type="button">Restaurar padrão</button>
+  </div>
+</header>
+
+<div class="notice" id="notice">
+  <strong>Sem automação de conta.</strong> Este estúdio gera roteiros e código de <em>avaliação</em> de candles. A entrada é feita manualmente no app. Opções binárias são de alto risco e podem ser restritas no seu país.
+  <button class="notice-close" id="noticeClose" type="button" aria-label="Fechar aviso">×</button>
+</div>
+
+<main class="layout">
+  <!-- ===================== BUILDER ===================== -->
+  <aside class="builder">
+    <section class="card">
+      <div class="card-head">
+        <h2>Estratégia</h2>
+        <span class="hint" id="presetHint">rascunho local</span>
+      </div>
+
+      <div class="preset-row">
+        <select id="presetSelect" aria-label="Presets salvos">
+          <option value="">Presets salvos…</option>
+        </select>
+        <button class="btn btn-small" id="btnSavePreset" type="button">Salvar</button>
+        <button class="btn btn-small btn-ghost" id="btnDeletePreset" type="button" title="Excluir preset selecionado">Excluir</button>
+      </div>
+
+      <div class="field">
+        <label for="f-name">Nome da estratégia</label>
+        <input id="f-name" data-field="name" type="text" maxlength="48" autocomplete="off">
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="f-asset">Ativo</label>
+          <input id="f-asset" data-field="asset" type="text" list="assetList" autocomplete="off">
+          <datalist id="assetList">
+            <option value="EUR/USD (OTC)"></option>
+            <option value="GBP/USD (OTC)"></option>
+            <option value="USD/JPY (OTC)"></option>
+            <option value="AUD/USD (OTC)"></option>
+            <option value="BTC/USD"></option>
+            <option value="ETH/USD"></option>
+            <option value="XAU/USD"></option>
+            <option value="USD/BRL (OTC)"></option>
+          </datalist>
+        </div>
+        <div class="field">
+          <label>Timeframe</label>
+          <div class="segmented" data-seg="timeframe">
+            <button data-value="M1" type="button">M1</button>
+            <button data-value="M5" type="button">M5</button>
+            <button data-value="M15" type="button">M15</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="f-strategy">Gatilho principal</label>
+          <select id="f-strategy" data-field="strategy">
+            <option value="engulfing">Engolfo (reversão)</option>
+            <option value="hammer">Martelo / estrela</option>
+            <option value="rsiEma">EMA 9/21 + RSI</option>
+            <option value="bollinger">Bandas de Bollinger</option>
+            <option value="breakout">Rompimento 20</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-expiry">Expiração</label>
+          <select id="f-expiry" data-field="expiry"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Direção permitida</label>
+        <div class="segmented" data-seg="direction">
+          <button data-value="both" type="button">Comprar e vender</button>
+          <button data-value="call" type="button">Só compra</button>
+          <button data-value="put" type="button">Só venda</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Filtros</h2>
+        <span class="hint">menos sinais, mais qualidade</span>
+      </div>
+
+      <div class="switch-row">
+        <label class="switch-line">
+          <input type="checkbox" data-field="trendFilter" id="f-trendFilter">
+          <span class="switch" aria-hidden="true"></span>
+          <span class="switch-label">Filtrar pela tendência (EMA)</span>
+        </label>
+        <input class="mini-num" data-field="trendPeriod" type="number" min="9" max="200" step="1" aria-label="Período da EMA de tendência">
+      </div>
+
+      <div class="switch-row">
+        <label class="switch-line">
+          <input type="checkbox" data-field="rsiFilter" id="f-rsiFilter">
+          <span class="switch" aria-hidden="true"></span>
+          <span class="switch-label">Filtrar zona de RSI</span>
+        </label>
+        <span class="mini-range" id="rsiHint">14 · 45–70</span>
+      </div>
+
+      <div class="sub-grid" id="rsiOptions">
+        <div class="field">
+          <label for="f-rsiPeriod">Período RSI</label>
+          <input id="f-rsiPeriod" data-field="rsiPeriod" type="number" min="5" max="50" step="1">
+        </div>
+        <div class="field">
+          <label for="f-rsiMin">RSI mín.</label>
+          <input id="f-rsiMin" data-field="rsiMin" type="number" min="5" max="95" step="1">
+        </div>
+        <div class="field">
+          <label for="f-rsiMax">RSI máx.</label>
+          <input id="f-rsiMax" data-field="rsiMax" type="number" min="5" max="95" step="1">
+        </div>
+      </div>
+
+      <div class="switch-row">
+        <label class="switch-line">
+          <input type="checkbox" data-field="avoidDoji" id="f-avoidDoji">
+          <span class="switch" aria-hidden="true"></span>
+          <span class="switch-label">Evitar candles de indefinição (doji)</span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label>Sessões preferidas</label>
+        <div class="chips" id="sessions">
+          <label class="chip"><input type="checkbox" data-session="asia"><span>Ásia</span></label>
+          <label class="chip"><input type="checkbox" data-session="london"><span>Londres</span></label>
+          <label class="chip"><input type="checkbox" data-session="ny"><span>Nova York</span></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Banca e risco</h2>
+        <span class="hint">em R$</span>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="f-balance">Banca total</label>
+          <input id="f-balance" data-field="balance" type="number" min="50" step="50">
+        </div>
+        <div class="field">
+          <label for="f-payout">Payout mínimo (%)</label>
+          <input id="f-payout" data-field="payout" type="number" min="50" max="100" step="1">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Modo de entrada</label>
+        <div class="segmented" data-seg="stakeMode">
+          <button data-value="percent" type="button">% da banca</button>
+          <button data-value="fixed" type="button">Valor fixo</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field" id="stakePercentWrap">
+          <label for="f-stakePercent">Risco por entrada (%)</label>
+          <input id="f-stakePercent" data-field="stakePercent" type="number" min="0.5" max="20" step="0.5">
+        </div>
+        <div class="field" id="stakeValueWrap">
+          <label for="f-stakeValue">Valor por entrada</label>
+          <input id="f-stakeValue" data-field="stakeValue" type="number" min="1" step="1">
+        </div>
+      </div>
+
+      <div class="switch-row">
+        <label class="switch-line">
+          <input type="checkbox" data-field="martingale" id="f-martingale">
+          <span class="switch" aria-hidden="true"></span>
+          <span class="switch-label">Martingale (recuperação)</span>
+        </label>
+      </div>
+
+      <div class="sub-grid" id="mgOptions">
+        <div class="field">
+          <label for="f-mgLevels">Níveis</label>
+          <input id="f-mgLevels" data-field="mgLevels" type="number" min="1" max="4" step="1">
+        </div>
+        <div class="field">
+          <label for="f-mgMultiplier">Multiplicador</label>
+          <input id="f-mgMultiplier" data-field="mgMultiplier" type="number" min="1.1" max="3" step="0.1">
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="f-dailyLossLimit">Limite de perda diária (%)</label>
+          <input id="f-dailyLossLimit" data-field="dailyLossLimit" type="number" min="1" max="50" step="1">
+        </div>
+        <div class="field">
+          <label for="f-maxTrades">Máx. de operações/dia</label>
+          <input id="f-maxTrades" data-field="maxTrades" type="number" min="1" max="50" step="1">
+        </div>
+      </div>
+
+      <div class="summary" id="riskSummary"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Anotações</h2>
+      </div>
+      <textarea id="f-notes" data-field="notes" rows="3" maxlength="400" placeholder="Observações, horário preferido, notícias a evitar…"></textarea>
+    </section>
+  </aside>
+
+  <!-- ===================== WORKSPACE ===================== -->
+  <section class="workspace">
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" data-tab="playbook" role="tab" type="button">Roteiro</button>
+      <button class="tab" data-tab="code" role="tab" type="button">Código</button>
+      <button class="tab" data-tab="json" role="tab" type="button">JSON</button>
+      <button class="tab" data-tab="sim" role="tab" type="button">Simulador</button>
+      <button class="tab" data-tab="risk" role="tab" type="button">Risco</button>
+    </nav>
+
+    <!-- ROTEIRO -->
+    <section class="tab-panel is-active" id="panel-playbook" role="tabpanel">
+      <div class="panel-head">
+        <div>
+          <h2>Roteiro de execução</h2>
+          <p>Checklist para operar no celular, sem improviso.</p>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-small" data-copy="playbookOut" type="button">Copiar</button>
+          <button class="btn btn-small btn-ghost" data-download="playbook" type="button">Baixar .md</button>
+        </div>
+      </div>
+      <div class="doc md" id="playbookOut" role="document"></div>
+    </section>
+
+    <!-- CÓDIGO -->
+    <section class="tab-panel" id="panel-code" role="tabpanel">
+      <div class="panel-head">
+        <div>
+          <h2>Script de avaliação</h2>
+          <p>JavaScript puro: recebe candles fechados e devolve <code>CALL</code>, <code>PUT</code> ou <code>null</code>.</p>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-small" data-copy="codeOut" type="button">Copiar</button>
+          <button class="btn btn-small btn-ghost" data-download="code" type="button">Baixar .js</button>
+        </div>
+      </div>
+      <pre class="code"><code id="codeOut"></code></pre>
+      <p class="foot-note">O script não se conecta à IQ Option e não envia ordens. Use-o em um console, planilha ou no seu próprio backtest.</p>
+    </section>
+
+    <!-- JSON -->
+    <section class="tab-panel" id="panel-json" role="tabpanel">
+      <div class="panel-head">
+        <div>
+          <h2>Configuração em JSON</h2>
+          <p>Salve, versione e reimporte sua estratégia.</p>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-small" data-copy="jsonEditor" type="button">Copiar</button>
+          <button class="btn btn-small btn-ghost" data-download="json" type="button">Baixar .json</button>
+        </div>
+      </div>
+      <textarea class="json-editor" id="jsonEditor" spellcheck="false" aria-label="Configuração JSON"></textarea>
+      <div class="row-end">
+        <span class="hint" id="jsonStatus">edite e aplique para atualizar o construtor</span>
+        <button class="btn btn-small" id="btnApplyJson" type="button">Aplicar JSON</button>
+      </div>
+    </section>
+
+    <!-- SIMULADOR -->
+    <section class="tab-panel" id="panel-sim" role="tabpanel">
+      <div class="panel-head">
+        <div>
+          <h2>Simulador de sinais</h2>
+          <p>Teste as regras em candles sintéticos ou importe um CSV. Estudo ilustrativo — não é backtest de mercado real; empate conta como perda.</p>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-small" id="btnSynthetic" type="button">Novo cenário</button>
+          <label class="btn btn-small btn-ghost file-btn">
+            Importar CSV
+            <input type="file" id="csvInput" accept=".csv,text/csv,text/plain">
+          </label>
+        </div>
+      </div>
+
+      <div class="stat-grid" id="simStats"></div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <h3>Candles e entradas</h3>
+          <span class="hint" id="chartHint">últimos 90 candles</span>
+        </div>
+        <canvas id="candleChart" height="300"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <h3>Curva de banca</h3>
+          <span class="hint" id="equityHint"></span>
+        </div>
+        <canvas id="equityChart" height="170"></canvas>
+      </div>
+
+      <div class="table-card">
+        <div class="chart-head">
+          <h3>Últimos sinais</h3>
+          <span class="hint" id="tradeHint"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="signals">
+            <thead>
+              <tr><th>#</th><th>Candle</th><th>Direção</th><th>Motivo</th><th>Entrada</th><th>Saída</th><th>Resultado</th></tr>
+            </thead>
+            <tbody id="tradeRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- RISCO -->
+    <section class="tab-panel" id="panel-risk" role="tabpanel">
+      <div class="panel-head">
+        <div>
+          <h2>Gestão de risco</h2>
+          <p>Quanto você perde se o mercado errar várias vezes seguidas.</p>
+        </div>
+      </div>
+
+      <div class="risk-grid">
+        <div class="chart-card">
+          <div class="chart-head">
+            <h3>Escada de entradas</h3>
+            <span class="hint">após sequência de perdas</span>
+          </div>
+          <div class="table-wrap">
+            <table class="signals risk-table">
+              <thead><tr><th>Perdas seguidas</th><th>Próxima entrada</th><th>Perda acumulada</th><th>% da banca</th></tr></thead>
+              <tbody id="riskRows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-head"><h3>Leitura rápida</h3></div>
+          <ul class="checklist" id="riskNotes"></ul>
+        </div>
+      </div>
+
+      <div class="callout callout-danger">
+        <h3>Aviso importante</h3>
+        <p>Opções binárias têm risco elevado e resultado binário: você pode perder 100% da entrada. Payout de 80% exige cerca de 55,6% de acerto só para empatar. Nenhuma estratégia, indicador ou martingale garante lucro. Verifique a legalidade e os termos da corretora no seu país. Esta ferramenta é educacional, não é recomendação de investimento e não executa ordens.</p>
+      </div>
+    </section>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>Script Studio · ferramenta independente, sem vínculo com a IQ Option. Não há login, API não oficial ou automação de conta.</p>
+  <p class="mono">rascunho salvo apenas no seu navegador</p>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
