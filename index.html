@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#101a20" />
+  <title>Afterhours — City Life</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="game-shell">
+    <canvas id="world" aria-label="Open world city game"></canvas>
+    <div class="vignette"></div>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Afterhours home"><span class="brand-mark">A</span><span>AFTER<span class="brand-dim">HOURS</span><small>CITY LIFE SIMULATOR</small></span></a>
+      <div class="location"><span class="live-dot"></span><div><b id="district-name">OLD TOWN</b><small id="clock">MONDAY · 08:42 PM</small></div></div>
+      <div class="top-actions"><button class="icon-btn" id="map-toggle" title="Map (M)">⌖</button><button class="icon-btn" id="help-toggle" title="How to play">?</button></div>
+    </header>
+    <section class="status-card glass">
+      <div class="profile"><div class="avatar">J</div><div><b>JAMIE PARKER</b><small id="occupation">CITY RESIDENT</small></div><div class="level">LVL <b id="level">01</b></div></div>
+      <div class="needs">
+        <div class="need"><div class="need-label"><span>ENERGY</span><b id="energy-value">82%</b></div><div class="meter"><i id="energy-bar" class="energy"></i></div></div>
+        <div class="need"><div class="need-label"><span>HUNGER</span><b id="hunger-value">76%</b></div><div class="meter"><i id="hunger-bar" class="hunger"></i></div></div>
+        <div class="need"><div class="need-label"><span>THIRST</span><b id="thirst-value">68%</b></div><div class="meter"><i id="thirst-bar" class="thirst"></i></div></div>
+      </div>
+      <div class="wallet"><small>AVAILABLE CASH</small><b><span>$</span><i id="cash">1,250</i></b><small class="bank">BANK <strong id="bank">$4,800</strong></small></div>
+    </section>
+    <aside class="right-rail">
+      <div class="rail-title"><span>YOUR CITY</span><i>LIVE</i></div>
+      <div class="city-map glass" id="mini-map-wrap"><canvas id="mini-map" width="180" height="142"></canvas><div class="map-caption"><span>⌖ YOU ARE HERE</span><b>MAP <kbd>M</kbd></b></div></div>
+      <div class="weather glass"><div class="weather-icon">☾</div><div><small>TONIGHT IN OLD TOWN</small><b>64° <span>PARTLY CLOUDY</span></b></div><span class="weather-temp">NW 8 mph</span></div>
+      <div class="nearby glass"><div class="rail-title"><span>NEARBY</span><span class="muted">SERVICES</span></div><div id="nearby-list"></div></div>
+    </aside>
+    <section class="objective glass" id="objective-card"><div class="objective-icon">✦</div><div><small id="objective-kicker">A CITY OF OPPORTUNITY</small><b id="objective-title">Make yourself at home.</b><p id="objective-copy">Explore the neighborhood. Find work, meet the locals, and build your life.</p></div><button id="objective-close" aria-label="Dismiss objective">×</button></section>
+    <div id="interact-prompt" class="interact-prompt glass hidden"><kbd>E</kbd><span>INTERACT</span><b id="prompt-name"></b></div>
+    <div class="touch-controls" aria-label="Touch controls">
+      <div class="touch-dpad">
+        <button class="touch-btn touch-up" data-key="w" aria-label="Move up">▲</button>
+        <button class="touch-btn touch-left" data-key="a" aria-label="Move left">◀</button>
+        <button class="touch-btn touch-right" data-key="d" aria-label="Move right">▶</button>
+        <button class="touch-btn touch-down" data-key="s" aria-label="Move down">▼</button>
+      </div>
+      <div class="touch-actions">
+        <button class="touch-action touch-run" data-key="shift" aria-label="Run">RUN</button>
+        <button class="touch-action touch-enter" data-action="e" aria-label="Interact">E</button>
+        <button class="touch-action touch-f" data-action="f" aria-label="Enter or exit vehicle">F</button>
+      </div>
+    </div>
+    <div class="vehicle-hud glass hidden" id="vehicle-hud"><span class="vehicle-symbol">▰</span><div><small id="vehicle-name">CITY HATCHBACK</small><b><span id="speed">0</span><small> MPH</small></b></div><div class="fuel"><small>FUEL</small><div class="meter"><i id="fuel-bar"></i></div></div><kbd>F</kbd></div>
+    <div class="toast-stack" id="toasts"></div>
+    <div class="bottom-bar"><div class="controls-hint"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> MOVE</span><span><kbd>E</kbd> INTERACT</span><span><kbd>SHIFT</kbd> RUN</span><span><kbd>F</kbd> VEHICLE</span></div><div class="bottom-right"><span id="mission-status">FREE ROAM</span><span class="sound-bars"><i></i><i></i><i></i><i></i></span></div></div>
+    <div class="modal-backdrop hidden" id="modal-backdrop"><section class="modal glass" role="dialog" aria-modal="true"><button class="modal-close" id="modal-close">×</button><div class="modal-eyebrow" id="modal-eyebrow">CITY SERVICES</div><h1 id="modal-title">Welcome</h1><p id="modal-description"></p><div id="modal-content"></div></section></div>
+    <div class="map-overlay hidden" id="map-overlay"><div class="map-window glass"><div class="map-head"><div><small>AFTERHOURS CITY GUIDE</small><h2>Explore the city</h2></div><button class="icon-btn" id="map-close">×</button></div><canvas id="big-map" width="960" height="600"></canvas><div class="map-legend"><span><i class="dot player-dot"></i> YOU</span><span><i class="dot service-dot"></i> CITY SERVICES</span><span><i class="dot home-dot"></i> HOMES</span><span>PRESS <kbd>M</kbd> TO CLOSE</span></div></div></div>
+    <div class="help-overlay hidden" id="help-overlay"><section class="help-card glass"><button class="modal-close" id="help-close">×</button><div class="modal-eyebrow">YOUR STORY STARTS HERE</div><h1>Welcome to the city.</h1><p>A little freedom, a lot of possibility. Make a living, find a place to call home, and see where the night takes you.</p><div class="help-grid"><article><span>01</span><b>Get around</b><p>WASD to walk. Hold Shift to run. Find a parked car or motorcycle and press F to drive.</p></article><article><span>02</span><b>Find your thing</b><p>Walk up to a place and press E. Take a delivery, repair a ride, or join the police, fire, or hospital crew.</p></article><article><span>03</span><b>Build a life</b><p>Grab food and water at the market. Visit the realty office to buy, sell, or rent a home.</p></article><article><span>04</span><b>Make it yours</b><p>Earn cash and reputation. Keep your needs up and your vehicle in good shape. The city is yours.</p></article></div><button class="primary-btn" id="start-playing">LET'S GO <span>→</span></button></section></div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
